@@ -1,71 +1,156 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Shortener</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>URL Shortener</h1>
-    <form id="shorten-form" action="shorten" method="post">
-        <label for="long-url">Long URL:</label>
-        <input type="url" id="long-url" name="long-url" placeholder="Enter a valid URL" required>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide-link-2">
+                    <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+                    <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
+                    <line x1="8" x2="16" y1="12" y2="12" />
+                </svg>
+            </div>
+            <h1>URL Shortener</h1>
+            <p class="subtitle">Transform your long URLs into short, memorable links</p>
+        </div>
 
-        <label for="short-url">Short URL (optional):</label>
-        <input type="text" id="short-url" name="short-url" placeholder="Enter a custom short URL">
+        <!-- Form -->
+        <div class="card form-card">
+            <form id="shorten-form">
+                <div class="form-group">
+                    <label for="long-url">Long URL</label>
+                    <input type="url" id="long-url" name="long-url" placeholder="Enter your long URL here" required>
+                </div>
 
-        <input type="submit" value="Shorten URL">
-    </form>
-    <div class="short-url">
-        <h4>All shorten urls</h4>
+                <div class="form-group">
+                    <label for="short-url">Custom Short URL (optional)</label>
+                    <input type="text" id="short-url" name="short-url" placeholder="Enter custom short URL">
+                </div>
+
+                <button type="submit" id="submit-btn">
+                    <span class="button-content">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide-scissors">
+                            <circle cx="6" cy="6" r="3" />
+                            <circle cx="6" cy="18" r="3" />
+                            <line x1="20" x2="8.12" y1="4" y2="15.88" />
+                            <line x1="14.47" x2="20" y1="14.48" y2="20" />
+                            <line x1="8.12" x2="12" y1="8.12" y2="12" />
+                        </svg>
+                        <span>Shorten URL</span>
+                    </span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+            </form>
+        </div>
+
+        <!-- URL History -->
+        <div class="card history-card">
+            <div class="history-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide-history">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                    <path d="M12 7v5l4 2" />
+                </svg>
+                <h2>Your Shortened URLs</h2>
+            </div>
+            <div id="urls-list" class="urls-list"></div>
+        </div>
     </div>
-</body>
 
-<script>
-    // Fetch all short urls data
-    const fetchShortUrls = async () => {
-        const res = await fetch("/get-short-url")
-        const links = await res.json()
-        const shortUrlElement = document.querySelector(".short-url");
+    <script>
+        const form = document.getElementById('shorten-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const buttonContent = submitBtn.querySelector('.button-content');
+        const spinner = submitBtn.querySelector('.spinner');
+        const urlsList = document.getElementById('urls-list');
 
-        // Looping through the short urls object.
-        for (const [shortUrl, longUrl] of Object.entries(links)) {
-            shortUrlElement.innerHTML += `<p><a href="${shortUrl}">${window.location.origin}/${shortUrl}</a></p>`;
-        }
-    }
+        // Fetch all short urls data
+        const fetchShortUrls = async () => {
+            try {
+                const res = await fetch("/get-short-url");
+                const links = await res.json();
 
-    fetchShortUrls()
+                urlsList.innerHTML = ''; // Clear existing content
 
-    document.getElementById("shorten-form").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const longUrl = formData.get("long-url");
-        const shortUrl = formData.get("short-url");
-        // console.log(longUrl, shortUrl)
-        // console.log(formData)
-
-        try {
-            fetch("/shorten", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ longUrl, shortUrl })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const shortUrlElement = document.querySelector(".short-url");
-                    shortUrlElement.innerHTML += `<p><a href="${data.shortUrl}">${window.location.origin}/${data.shortUrl}</a></p>`;
-                })
-                .catch(error => {
-                    console.error("Error:", error);
+                // Create URL items
+                Object.entries(links).forEach(([shortUrl, longUrl]) => {
+                    const urlItem = document.createElement('div');
+                    urlItem.className = 'url-item';
+                    urlItem.innerHTML = `
+                        <div class="url-details">
+                            <p class="short-url">${window.location.origin}/${shortUrl}</p>
+                            <p class="long-url">${longUrl}</p>
+                        </div>
+                        <a href="${shortUrl}" target="_blank" rel="noopener noreferrer" class="external-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-external-link">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" x2="21" y1="14" y2="3"/>
+                            </svg>
+                        </a>
+                    `;
+                    urlsList.appendChild(urlItem);
                 });
-        } catch (error) {
-            console.error("Error:", error);
-        }
-    })
-</script>
+            } catch (error) {
+                console.error("Error fetching URLs:", error);
+            }
+        };
+
+        fetchShortUrls();
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Show loading state
+            buttonContent.style.display = 'none';
+            spinner.style.display = 'block';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(event.target);
+            const longUrl = formData.get('long-url');
+            const shortUrl = formData.get('short-url');
+
+            try {
+                const response = await fetch("/shorten", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ longUrl, shortUrl })
+                });
+
+                const data = await response.json();
+
+                // Refresh the URLs list
+                await fetchShortUrls();
+
+                // Clear form
+                form.reset();
+            } catch (error) {
+                console.error("Error:", error);
+            } finally {
+                // Reset loading state
+                buttonContent.style.display = 'flex';
+                spinner.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
 
 </html>
