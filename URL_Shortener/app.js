@@ -62,8 +62,14 @@ const server = createServer(async (req, res) => {
         path.join("URL_Shortener", "public", "style.css"),
         "text/css"
       );
+    } // API to get the shorten url
+    else if (req.url === "/get-short-url") {
+      const links = await loadLinks();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify(links));
     } else {
       // Handling the request for the shorten url click
+      console.log(req.url);
       const links = await loadLinks();
       const shortUrl = req.url.split("/").pop(); // /3f06576e => 3f06576e
 
@@ -74,13 +80,6 @@ const server = createServer(async (req, res) => {
 
       res.writeHead(404, { "Content-Type": "text/plain" });
       return res.end("Short URL not found");
-    }
-
-    // API to get the shorten url
-    if (req.url === "/get-short-url") {
-      const links = await loadLinks();
-      res.writeHead(200, { "Content-Type": "application/json" });
-      return res.end(JSON.stringify(links));
     }
   }
 
