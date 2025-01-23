@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
+
 <head>
     <meta charset="utf-8">
     <title>URL Shortener</title>
-<link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <h1>URL Shortener</h1>
     <form id="shorten-form" action="shorten" method="post">
@@ -17,11 +19,25 @@
         <input type="submit" value="Shorten URL">
     </form>
     <div class="short-url">
-        <p>Your short URL will appear here</p>
+        <h4>All shorten urls</h4>
     </div>
 </body>
 
 <script>
+    // Fetch all short urls data
+    const fetchShortUrls = async () => {
+        const res = await fetch("/get-short-url")
+        const links = await res.json()
+        const shortUrlElement = document.querySelector(".short-url");
+
+        // Looping through the short urls object.
+        for (const [shortUrl, longUrl] of Object.entries(links)) {
+            shortUrlElement.innerHTML += `<p><a href="${shortUrl}">${window.location.origin}/${shortUrl}</a></p>`;
+        }
+    }
+
+    fetchShortUrls()
+
     document.getElementById("shorten-form").addEventListener("submit", (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -29,6 +45,27 @@
         const shortUrl = formData.get("short-url");
         // console.log(longUrl, shortUrl)
         // console.log(formData)
+
+        try {
+            fetch("/shorten", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ longUrl, shortUrl })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const shortUrlElement = document.querySelector(".short-url");
+                    shortUrlElement.innerHTML += `<p><a href="${data.shortUrl}">${window.location.origin}/${data.shortUrl}</a></p>`;
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+        } catch (error) {
+            console.error("Error:", error);
+        }
     })
 </script>
+
 </html>
