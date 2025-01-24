@@ -19,6 +19,7 @@
   "homepage": "https://github.com/XDevRabi/tiny-nodejs-projects#readme",
   "description": "",
   "dependencies": {
-    "chalk": "^5.4.1"
+    "chalk": "^5.4.1",
+    "express": "^4.21.2"
   }
 }
